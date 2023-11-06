@@ -1,0 +1,61 @@
+from langchain.chat_models import ChatOpenAI
+from langchain.vectorstores import Chroma
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.prompts import PromptTemplate
+from langchain.chains import ConversationalRetrievalChain
+import param
+from dotenv import load_dotenv
+import os
+import openai
+
+
+dotenv_path = 'KEYs.env'  
+_ = load_dotenv(dotenv_path)
+
+openai.api_key = os.environ['OPENAI_API_KEY']
+
+persist_directory = 'docs/chroma/'
+embedding = OpenAIEmbeddings()
+vectordb = Chroma(
+    persist_directory=persist_directory,
+    embedding_function=embedding
+)
+
+No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
+
+template = """Beantworten Sie die Frage am Ende des Textes anhand der folgenden Informationen. 
+Geben Sie bei der Antwort so viele relevante Hintergrundinformationen mit wie Möglich.
+Die Antwort sollte nicht länger als 8 Sätze sein.
+Kontext:
+{context}
+Frage: {question}
+Hilfreiche Antwort:"""
+prompt = PromptTemplate.from_template(template)
+
+def load_model():
+    qa = ConversationalRetrievalChain.from_llm(
+        llm=ChatOpenAI(temperature=0), 
+        retriever=vectordb.as_retriever(search_type= 'similarity',search_kwargs={"k": 3}),
+        combine_docs_chain_kwargs={"prompt": prompt},
+        response_if_no_docs_found = No_Doc,
+        return_source_documents=True,
+        chain_type='stuff'
+    )
+    return qa 
+
+
+class cbfs(param.Parameterized):
+    chat_history = param.List([])
+    print("chat_history XXX")
+
+    def __init__(self,  **params):
+        super(cbfs, self).__init__( **params)
+        self.qa = load_model()
+    
+    def convchain(self, query):
+        result = self.qa({"question": query, "chat_history": self.chat_history})
+        self.chat_history.extend([(query, result["answer"])])
+        return result
+
+    def clr_history(self):
+        self.chat_history = []
