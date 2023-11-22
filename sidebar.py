@@ -1,3 +1,6 @@
+# a python file that possibly contains code for creating a sidebar in a web application. 
+# In the context of Streamlit, this could be used to display navigation links, filters,
+# or other interactive elements on the side of the app.
 import streamlit as st
 from faq import faq
 

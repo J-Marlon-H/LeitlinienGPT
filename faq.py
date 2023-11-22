@@ -1,7 +1,10 @@
+# Streamlit is a popular Python library used for creating web applications
+# It allows developers to create interactive web apps quickly with minimal effort.
 import streamlit as st
 
 
 def faq():
+    # This method allows you to write text in Markdown format, which Streamlit will then render as part of the web application.
     st.markdown(
         """
 # FAQ
