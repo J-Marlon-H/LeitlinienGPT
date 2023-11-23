@@ -1,6 +1,6 @@
 from langchain.chat_models import ChatOpenAI
-from langchain.vectorstores import Chroma
 from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores.elasticsearch import ElasticsearchStore
 from langchain.prompts import PromptTemplate
 from langchain.chains import ConversationalRetrievalChain
 import param
@@ -8,17 +8,23 @@ from dotenv import load_dotenv
 import os
 import openai
 
-
 dotenv_path = 'KEYs.env'  
 _ = load_dotenv(dotenv_path)
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 
-persist_directory = 'docs/chroma/'
 embedding = OpenAIEmbeddings()
-vectordb = Chroma(
-    persist_directory=persist_directory,
-    embedding_function=embedding
+
+
+elastic_vector_search = ElasticsearchStore(
+    es_cloud_id="LeitlinienGPT:ZXUtY2VudHJhbC0xLmF3cy5jbG91ZC5lcy5pbzo0NDMkYjQ2M2U4MmFhMTU3NDk0MWE2YTZlMjkxNzRmY2FjYjYkNzJlMDU1NzEyZjM5NDU3NTgxNTUyZDFlODFiMDE0YmY=",
+    index_name="leitliniengpt",
+    embedding=embedding,
+    es_user="enterprise_search",
+    es_password="-VwsG8mt-TELfRQ",
+    # strategy=ElasticsearchStore.ApproxRetrievalStrategy(
+    #     hybrid=True,
+    # )
 )
 
 No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
@@ -34,8 +40,8 @@ prompt = PromptTemplate.from_template(template)
 
 def load_model():
     qa = ConversationalRetrievalChain.from_llm(
-        llm=ChatOpenAI(temperature=0), 
-        retriever=vectordb.as_retriever(search_type= 'similarity',search_kwargs={"k": 3}),
+        llm=ChatOpenAI(temperature=0, model="gpt-4-1106-preview"), # gpt-3.5-turbo
+        retriever=elastic_vector_search.as_retriever(search_kwargs={"k": 3}),
         combine_docs_chain_kwargs={"prompt": prompt},
         response_if_no_docs_found = No_Doc,
         return_source_documents=True,
