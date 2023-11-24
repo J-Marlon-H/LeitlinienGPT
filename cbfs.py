@@ -12,19 +12,20 @@ dotenv_path = 'KEYs.env'
 _ = load_dotenv(dotenv_path)
 
 openai.api_key = os.environ['OPENAI_API_KEY']
+_es_cloud_id = os.environ['OPENAI_API_KEY']
+_es_user = os.environ['OPENAI_API_KEY']
+_es_password = os.environ['OPENAI_API_KEY']
+
 
 embedding = OpenAIEmbeddings()
 
 
 elastic_vector_search = ElasticsearchStore(
-    es_cloud_id="LeitlinienGPT:ZXUtY2VudHJhbC0xLmF3cy5jbG91ZC5lcy5pbzo0NDMkYjQ2M2U4MmFhMTU3NDk0MWE2YTZlMjkxNzRmY2FjYjYkNzJlMDU1NzEyZjM5NDU3NTgxNTUyZDFlODFiMDE0YmY=",
+    es_cloud_id=_es_cloud_id,
     index_name="leitliniengpt",
     embedding=embedding,
-    es_user="enterprise_search",
-    es_password="-VwsG8mt-TELfRQ",
-    # strategy=ElasticsearchStore.ApproxRetrievalStrategy(
-    #     hybrid=True,
-    # )
+    es_user=_es_user,
+    es_password=_es_password,
 )
 
 No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
@@ -52,7 +53,6 @@ def load_model():
 
 class cbfs(param.Parameterized):
     chat_history = param.List([])
-    print("chat_history XXX")
 
     def __init__(self,  **params):
         super(cbfs, self).__init__( **params)
