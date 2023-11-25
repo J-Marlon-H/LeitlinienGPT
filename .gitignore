@@ -1,0 +1,12 @@
+KEYs.env
+#__pycache__/ or *.pyc to exclude compiled Python files.
+__pycache__/
+# .DS_Store if you're using macOS, to exclude system files.
+.DS_Store
+# *.log to exclude log files that might be generated.
+*.log
+# .env if you have other environment variable files.
+.env
+
+
+
