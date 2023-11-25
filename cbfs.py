@@ -33,16 +33,19 @@ elastic_vector_search = ElasticsearchStore(
 
 # PROMPT TEMPLATE
 # No_Doc is a string to be used when no relevant documents are found
-No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
+No_Doc = "The available documents do not contain information related to your question."
 
 # defines a prompt template in a structured format, guiding how the AI should format its responses
-template = """Beantworten Sie die Frage am Ende des Textes anhand der folgenden Informationen. 
-Geben Sie bei der Antwort so viele relevante Hintergrundinformationen mit wie Möglich.
-Die Antwort sollte nicht länger als 8 Sätze sein.
-Kontext:
+template = """Answer the following question with relevant information based on the context provided.
+The answer should be concise, informative, and no longer than 8 sentences. Please respond in the same language as the question.
+
+Context:
 {context}
-Frage: {question}
-Hilfreiche Antwort:"""
+
+Question: {question}
+
+Insightful Answer:"""
+
 prompt = PromptTemplate.from_template(template)
 
 # MODEL LOADING FUNCTION
