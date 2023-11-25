@@ -19,7 +19,7 @@ def sidebar():
         )
         st.markdown("Die Website ist immer offen für neue Anregungen. \n")
         st.markdown("Gebt mir gerne feedback unter marlon.hamm@outlook.de! \n")
-        st.markdown("Für Interessierte kann der Code auf [GitHub](XXX) eingesehen werden. ")
+        # st.markdown("Für Interessierte kann der Code auf [GitHub](XXX) eingesehen werden. ")
         
         st.markdown("Made by [Marlon Hamm](https://www.linkedin.com/in/m-hamm/) & [Paolo Oppelt](https://www.linkedin.com/in/paolo-oppelt/) 😃")
 
