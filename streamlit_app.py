@@ -8,21 +8,23 @@ st.set_page_config(page_title="LeitlinienGPT", page_icon="🚑", layout="wide") 
 st.header("👨🏽‍⚕️LeitlinienGPT👩🏻‍⚕️")
 
 sidebar()
-print("YYY")
+
+if 'cb' not in st.session_state:
+    st.session_state.cb = cbfs()
+
+def DB():
+    st.session_state.cb.load_model(st.session_state.model)
+
+def clr_hist():
+    st.session_state.cb.clr_history()
 
 MODEL_LIST = ["Alle AMWF Leitlinien", "Nur aktuell gültige Leitlinien"]
-model: str = st.selectbox("Datenbank", options=MODEL_LIST)  # type: ignore
-print(model)
+st.selectbox("Datenbank", options=MODEL_LIST, key="model",
+             on_change = DB)  
 
-@st.cache_resource # Mutation and concurrency issues: https://docs.streamlit.io/library/advanced-features/caching#mutation-and-concurrency-issues
-def Load_Langchain():
-    return cbfs()
+st.session_state.cb.load_model_test = st.session_state.cb.load_model(st.session_state.model)
 
-cb = Load_Langchain()
-
-history_cleared = st.button('Clear Chat History')
-if history_cleared:
-    cb.clr_history()
+history_cleared = st.button('Clear Chat History',on_click = clr_hist)
 
 with st.form('my_form'):
     text = st.text_area('Stelle eine Frage an die Leitlinien:', '')
@@ -32,10 +34,7 @@ with st.form('my_form'):
         submitted = st.form_submit_button('Submit')
         if submitted:
             answer_col, sources_col = st.columns(2)
-            result = cb.convchain(text) # generate_response(text)
-            print("result[chat_history]:",result["chat_history"])
-            for i in result:
-                print(i)
+            result = st.session_state.cb.convchain(text) # generate_response(text)
 
             with answer_col:
                 st.markdown("#### Antwort")
@@ -49,6 +48,5 @@ with st.form('my_form'):
                     parts[-1] = parts[-1].replace('.pdf', '')
                     st.markdown(f"[{parts[1]} - {parts[-1]}]")
                     st.markdown(f"Seite: {source.metadata['page']}")
+                    st.markdown(f"{source.metadata['Gültigkeit']}")
                     st.markdown("---")
-
-# Ist eine Anamnese auch genannt als Test in den Dokumenten?
