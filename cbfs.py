@@ -12,9 +12,12 @@ dotenv_path = 'KEYs.env'
 _ = load_dotenv(dotenv_path)
 
 openai.api_key = os.environ['OPENAI_API_KEY']
-_es_cloud_id = os.environ['OPENAI_API_KEY']
-_es_user = os.environ['OPENAI_API_KEY']
-_es_password = os.environ['OPENAI_API_KEY']
+# _es_cloud_id = os.environ['OPENAI_API_KEY']
+_es_cloud_id = os.environ['es_cloud_id']
+# _es_user = os.environ['OPENAI_API_KEY']
+# _es_password = os.environ['OPENAI_API_KEY']
+_es_user = os.environ['es_user']
+_es_password = os.environ['es_password']
 
 
 embedding = OpenAIEmbeddings()
