@@ -28,13 +28,14 @@ elastic_vector_search = ElasticsearchStore(
 
 No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
 
-template = """Beantworten Sie die Frage am Ende des Textes anhand der folgenden Informationen. 
-Geben Sie bei der Antwort so viele relevante Hintergrundinformationen mit wie Möglich.
-Die Antwort sollte nicht länger als 8 Sätze sein.
-Kontext:
-{context}
-Frage: {question}
-Hilfreiche Antwort:"""
+template = """
+Only base your response on the context. 
+The answer should not exceed 8 sentences.
+Memorize the language I ask you in my question.
+context: {context}
+question: {question}
+Answer in the same language which I requested you to memorize. 
+:"""
 prompt = PromptTemplate.from_template(template)
 
 def Init_model():
