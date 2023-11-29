@@ -43,10 +43,9 @@ with st.form('my_form'):
             with sources_col:
                 st.markdown("#### Quellen")
                 for source in result["source_documents"]:
-                    st.markdown(source.page_content)
                     parts = source.metadata["source"].split('/')
                     parts[-1] = parts[-1].replace('.pdf', '')
                     st.markdown(f"[{parts[1]} - {parts[-1]}]")
-                    st.markdown(f"Seite: {source.metadata['page']}")
-                    st.markdown(f"{source.metadata['Gültigkeit']}")
+                    st.markdown(f"Seite: {source.metadata['page']}  --  {source.metadata['Gültigkeit']}")
+                    st.markdown(f"...{source.page_content}...")
                     st.markdown("---")

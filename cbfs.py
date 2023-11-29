@@ -26,10 +26,11 @@ elastic_vector_search = ElasticsearchStore(
     es_password=_es_password,
 )
 
-No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
+# No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
 
 template = """
-Only base your response on the context. 
+Only base your response on the context provided below. 
+Give as many detailes as possible.
 The answer should not exceed 8 sentences.
 Memorize the language I ask you in my question.
 context: {context}
@@ -43,7 +44,7 @@ def Init_model():
         llm=ChatOpenAI(temperature=0, model="gpt-4-1106-preview"), # gpt-3.5-turbo
         retriever=elastic_vector_search.as_retriever(search_kwargs={"k": 3}),
         combine_docs_chain_kwargs={"prompt": prompt},
-        response_if_no_docs_found = No_Doc,
+        # response_if_no_docs_found = No_Doc,
         return_source_documents=True,
         chain_type='stuff'
     )
