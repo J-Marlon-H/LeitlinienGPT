@@ -6,16 +6,16 @@ def sidebar():
         st.markdown(
             "## Tipps zur Benutzung\n"
             "1. Stelle eine Frage an die [AWMF Leitlinien](https://register.awmf.org/de/leitlinien/aktuelle-leitlinien).\n"  
-            "2. Stelle Rückfragen und Chatte mit den Leitlinien.\n"  
-            "3. Verifiziere die Antwort anhand der Quellen.\n"
-            "4. Setze die chat history zurück für eine neue Frage!\n"
+            "2. Stelle Rückfragen und nutze LeitlinienGPT als Suchmaschine.\n"  
+            "3. Verifiziere die Antwort anhand der genannten Quellen.\n"
+            "4. Setze die chat history zurück für ein neues Thema!\n"
         )
 
         st.markdown("---")
         st.markdown("# Über die App")
         st.markdown(
-            "👨🏽‍⚕️LeitlinienGPT👩🏻‍⚕️ ermöglicht einen Chat mit den AWMF Leitlinien. \n"
-            "Die Antwort ist möglichst qualitativ mit Referenz zur entsprechenden Leitlinie. "
+            "👨🏽‍⚕️LeitlinienGPT👩🏻‍⚕️ ist eine Suchmaschine für die AWMF Leitlinien. \n"
+            "Die Antworten sind einfach verständlich und nennen die relevanten Leitlinien als Quelle. "
         )
         st.markdown("Die Website ist immer offen für neue Anregungen. \n")
         st.markdown("Gebt mir gerne feedback unter marlon.hamm@outlook.de! \n")

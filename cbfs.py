@@ -27,11 +27,13 @@ elastic_vector_search = ElasticsearchStore(
 )
 
 # No_Doc = "Die hinterlegten Leitlinien Dokumente enthalten keine Informationen zu Ihrer Frage."
+# If the context is not sufficient, say "In den Leitlinien stehen keine Informationen zu Ihrer Frage".
+# If there is no information in the context relating to the question then say say that you did not find relevant information in the Leitlinien.
 
 template = """
-Only base your response on the context provided below. 
-Give as many detailes as possible.
-The answer should not exceed 8 sentences.
+Only answer based on the context provided below. 
+Provide all relevant details from the context provided below.
+The answer should not exceed six sentences.
 Memorize the language I ask you in my question.
 context: {context}
 question: {question}

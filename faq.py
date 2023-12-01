@@ -8,8 +8,8 @@ def faq():
 ## Was genau ist mit den AWMF Leitlinien gemeint?
 Die Datenbank besteht aus den deutschen medizinischen [aktuellen Leitlinien](https://register.awmf.org/de/leitlinien/aktuelle-leitlinien), einsehbar auf AWMF online.
 Dies umfasst 931 Dokumente mit gesamt 86.922 Seiten.
-An diese Datenbank wird eine Suchmaschine angeschlossen, 
-um Fragen mit den best passensten Antworten in den Leitlinien verbinden zu können.
+Eine Suchmaschine ist mit dieser Datenbank verbunden, 
+um Fragen mit den am besten geeigneten Antworten in den Leitlinien zu verknüpfen.
 Die Datenbank Option "Nur aktuell gültige Leitlinien" besteht nur aus den noch nicht abgelaufenen Leitlinien.
 
 ## Sind meine Daten sicher?
