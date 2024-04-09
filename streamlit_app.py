@@ -22,8 +22,6 @@ MODEL_LIST = ["Alle AMWF Leitlinien", "Nur aktuell gültige Leitlinien"]
 st.selectbox("Datenbank", options=MODEL_LIST, key="model",
              on_change = DB)  
 
-st.session_state.cb.load_model_test = st.session_state.cb.load_model(st.session_state.model)
-
 history_cleared = st.button('Clear Chat History',on_click = clr_hist)
 
 with st.form('my_form'):

@@ -31,8 +31,7 @@ elastic_vector_search = ElasticsearchStore(
 # If there is no information in the context relating to the question then say say that you did not find relevant information in the Leitlinien.
 
 template = """
-Only answer based on the context provided below. 
-Provide all relevant details from the context provided below.
+Only answer based on the context provided below and provide all potentially relevant details.
 The answer should not exceed six sentences.
 Memorize the language I ask you in my question.
 context: {context}
@@ -67,7 +66,7 @@ class cbfs(param.Parameterized):
                         llm=ChatOpenAI(temperature=0, model="gpt-4-1106-preview"), # gpt-3.5-turbo
                         retriever=elastic_vector_search.as_retriever(search_kwargs={"k": 3,'filter': [{"term": {"metadata.Gültigkeit.keyword": "Gültig"}}]}),
                         combine_docs_chain_kwargs={"prompt": prompt},
-                        response_if_no_docs_found = No_Doc,
+                        # response_if_no_docs_found = No_Doc,
                         return_source_documents=True,
                         chain_type='stuff'
                         )
