@@ -54,7 +54,6 @@ def Init_model():
 
 class cbfs(param.Parameterized):
     chat_history = param.List([])
-    count = param.List([])
 
     def __init__(self,  **params):
         super(cbfs, self).__init__( **params)
@@ -70,7 +69,6 @@ class cbfs(param.Parameterized):
                         return_source_documents=True,
                         chain_type='stuff'
                         )
-            self.count.append(1)
 
         else:
             self.qa = Init_model()
