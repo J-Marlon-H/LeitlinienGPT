@@ -58,13 +58,14 @@ async def run():
                 await page.mouse.wheel(0, 100)
     	        #await asyncio.sleep(1)
                 await page.wait_for_load_state('networkidle')
-
-                try:
-                    sub_link = await page.wait_for_selector('ion-app.md.ion-page.hydrated', state='attached')
-                    await sub_link.click()
-                except playwright.async_api.Error as e:
-                    print(f'An error occurred: {e}')
-                    # Additional logic to handle the error, maybe retry or log the occurrence for further investigation.
+                
+                page.locator("ion-content[class='md.hydrated'] #Download")
+                # try:
+                #     sub_link = await page.wait_for_selector('ion-app.md.ion-page.hydrated', state='attached')
+                #     await sub_link.click()
+                # except playwright.async_api.Error as e:
+                #     print(f'An error occurred: {e}')
+                #     # Additional logic to handle the error, maybe retry or log the occurrence for further investigation.
 
                 # 'ion-app.md.ion-page.hydrated'
                 # 'ion-content.md.hydrated'
@@ -79,52 +80,52 @@ async def run():
                 # 'ion-col.md.hydrated'
 
                 # Execute a script that pierces through the shadow roots to click the button
-                await page.evaluate("""() => {
-                    let shadowRoot = document.querySelector('ion-app.md.ion-page.hydrated').shadowRoot;
-                    console.log('First level shadow root:', shadowRoot);
-                    if (!shadowRoot) {
-                        console.error('First level shadow root not found');
-                        return;
-                    }
+                # await page.evaluate("""() => {
+                #     let shadowRoot = document.querySelector('ion-app.md.ion-page.hydrated').shadowRoot;
+                #     console.log('First level shadow root:', shadowRoot);
+                #     if (!shadowRoot) {
+                #         console.error('First level shadow root not found');
+                #         return;
+                #     }
 
-                    // Assuming you have an array of selectors that lead to the shadow DOM hierarchy
-                    const selectors = [
-                        'ion-content.md.hydrated',
-                        'ion-router-outlet.menu-content.menu-content-overlay.hydrated',
-                        'ion-router-outlet.hydrated',
-                        'ion-content.md.hydrated',
-                        'ion-grid.md.hydrated',
-                        'ion-row.md.hydrated',
-                        'ion-col.md.hydrated',
-                        'ion-grid.search_result.search_result_compact.no-bottomline.document-list.md.hydrated',
-                        'ion-row.md.hydrated',
-                        'ion-col.md.hydrated'
-                    ];
+                #     // Assuming you have an array of selectors that lead to the shadow DOM hierarchy
+                #     const selectors = [
+                #         'ion-content.md.hydrated',
+                #         'ion-router-outlet.menu-content.menu-content-overlay.hydrated',
+                #         'ion-router-outlet.hydrated',
+                #         'ion-content.md.hydrated',
+                #         'ion-grid.md.hydrated',
+                #         'ion-row.md.hydrated',
+                #         'ion-col.md.hydrated',
+                #         'ion-grid.search_result.search_result_compact.no-bottomline.document-list.md.hydrated',
+                #         'ion-row.md.hydrated',
+                #         'ion-col.md.hydrated'
+                #     ];
 
-                    selectors.forEach((selector, index) => {
-                        if (shadowRoot) {
-                            const nextLevel = shadowRoot.querySelector(selector);
-                            console.log(`Level ${index + 1} shadow root:`, nextLevel);
-                            if (nextLevel) {
-                                shadowRoot = nextLevel.shadowRoot;
-                            } else {
-                                console.error(`Selector not found or no shadowRoot available for this level: ${selector}`);
-                                // Breaking out of the forEach loop since it doesn't support return
-                                return false;
-                            }
-                        }
-                    });
+                #     selectors.forEach((selector, index) => {
+                #         if (shadowRoot) {
+                #             const nextLevel = shadowRoot.querySelector(selector);
+                #             console.log(`Level ${index + 1} shadow root:`, nextLevel);
+                #             if (nextLevel) {
+                #                 shadowRoot = nextLevel.shadowRoot;
+                #             } else {
+                #                 console.error(`Selector not found or no shadowRoot available for this level: ${selector}`);
+                #                 // Breaking out of the forEach loop since it doesn't support return
+                #                 return false;
+                #             }
+                #         }
+                #     });
 
-                    // Attempt to find and click the download button after traversing all shadow roots
-                    let downloadButton = shadowRoot.querySelector('a[download]');
-                    console.log('Download button:', downloadButton);
+                #     // Attempt to find and click the download button after traversing all shadow roots
+                #     let downloadButton = shadowRoot.querySelector('a[download]');
+                #     console.log('Download button:', downloadButton);
 
-                    if (downloadButton) {
-                        downloadButton.click();
-                    } else {
-                        console.error('Download button not found');
-                    }
-                }""");
+                #     if (downloadButton) {
+                #         downloadButton.click();
+                #     } else {
+                #         console.error('Download button not found');
+                #     }
+                # }""");
 
 
 
