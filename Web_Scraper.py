@@ -1,133 +1,116 @@
 import asyncio
 from playwright.async_api import async_playwright
+import aiohttp
+import aiofiles
+import asyncio
+import os
+import re
+
+# The function to download the file
+async def download_file(url, folder, name):
+    name = re.sub(r'[<>:"/\\|?*]', '', name)
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+    file_path = os.path.join(folder, name)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                async with aiofiles.open(file_path, 'wb') as f:
+                    await f.write(await resp.read())
+                print(f"Downloaded {name} to {folder}")
+            else:
+                print(f"Failed to download {url}. Status code: {resp.status}")
 
 async def run():
+    download_folder = 'Database'
+    Final_Link_List = []
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)  # Use headless=False to see the browser UI
-        page = await browser.new_page()
+        browser = await p.chromium.launch(headless=True)  # Use headless=False to see the browser UI
+        context = await browser.new_context()
+        context.set_default_timeout(120000)
+        page = await context.new_page()
 
         # Navigate to the page
         await page.goto('https://register.awmf.org/de/leitlinien/aktuelle-leitlinien')
 
         # Wait for the list under "NACH FACHGESELLSCHAFT" to load
-        await page.wait_for_selector('ion-col.guideline-listing-title.md.hydrated', timeout=60000)
+        await page.wait_for_selector('ion-col.guideline-listing-title.md.hydrated')
 
         # Wait for the "NACH FACH" tab to be available and click on it
         await page.click('ion-segment-button[value="discipline"]')
 
         # Wait for the list under "NACH FACH" to load
-        await page.wait_for_selector('ion-col.guideline-listing-title.md.hydrated', timeout=60000)
+        await page.wait_for_selector('ion-col.guideline-listing-title.md.hydrated')
 
         # Collect all link URLs
         link_elements = await page.query_selector_all('ion-col.guideline-listing-title.md.hydrated a')
         main_links = []
+        Fachgesellschaften= []
         for link_element in link_elements:
             href = await link_element.get_attribute('href')
+            Fachgesellschaft = await link_element.text_content()
             main_links.append(href)
-        print(main_links[0])
+            Fachgesellschaften.append(Fachgesellschaft)
+        print("main_links:", len(main_links))
+        print("Fachgesellschaften: ",len(Fachgesellschaften))
 
         # Loop through the collected links and click on each one
-        for link in main_links:
+        for i in range(len(main_links)):
             # Navigate to the link
-            await page.goto(f'https://register.awmf.org{link}')
-            await asyncio.sleep(1)
+            print(f'main_link: https://register.awmf.org{main_links[i]}')
+            await page.goto(f'https://register.awmf.org{main_links[i]}')
+            await page.wait_for_load_state('networkidle')
+
+            # Locate the h3 header
+            header = await page.query_selector('h3:text("Beteiligungen an Leitlinien anderer Fachgesellschaften")')
+
+            # Get the y-coordinate of the header
+            header_box = await header.bounding_box() if header else None
+            header_y = header_box['y'] if header_box else float('inf')
+
+            # Collect sub_links only above the h3 header
+            sub_link_elements = await page.query_selector_all('ion-col.guideline-listing-title.md.hydrated a')
+            sub_links = []
+            for sub_link in sub_link_elements:
+                sub_link_box = await sub_link.bounding_box()
+                if sub_link_box is None:
+                    break
+                if sub_link_box['y'] < header_y:
+                    href = await sub_link.get_attribute('href')
+                    sub_links.append(href)
+            print("sub_links:", len(sub_links))
             
-            # # Get all sub-links on the current page
-            # sub_links_test = await page.query_selector_all('ion-col.guideline-listing-row.md.hydrated a')
-            # print(sub_links_test)
-
-            #             # Collect all sub-link URLs
-            # sub_links = await page.query_selector_all('ion-col.guideline-listing-row a')
-            # sub_links_urls = [await link.get_attribute('href') for link in sub_links]
-            # print(sub_links_urls)
-
-            # # Collect all hyperlinks with the class '_ngcontent-som-c55'
-            # link_elements = await page.query_selector_all('a._ngcontent-som-c55')
-            # print(link_elements)
-
-            sub_links = await page.query_selector_all('ion-col.guideline-listing-title.md.hydrated a')
-            print(sub_links)
-            # guideline-listing-title md hydrated
-
             for sub_link in sub_links:
-                print(sub_link)
+                await page.wait_for_load_state('networkidle')
+                print("sub_link:", sub_link)
                 # Click on sub-link and wait for navigation
-                await sub_link.click()
-                await page.wait_for_load_state('networkidle')
-                await asyncio.sleep(1)  # Wait for one second
-                await page.mouse.wheel(0, 100)
-    	        #await asyncio.sleep(1)
-                await page.wait_for_load_state('networkidle')
+                await page.goto(sub_link)
+
+                first_download_button = page.locator('text=Download').first
+
+                # Retrieve the 'href' attribute of the first download button
+                download_href = await first_download_button.get_attribute('href')
+
+                Final_Link_List.append(download_href)
+
+                # You can customize the file name here
+                file_name_tmp = download_href.rsplit('/', 1)[-1]
+                file_name = f"{Fachgesellschaften[i]}__{file_name_tmp}"  # Change this to your preferred file naming convention
+                print("file_name:", file_name)
+
+                final_link = f"https://register.awmf.org{download_href}"
+                print("final_link:", final_link)
+
+                # Call the download function
                 
-                page.locator("ion-content[class='md.hydrated'] #Download")
-                # try:
-                #     sub_link = await page.wait_for_selector('ion-app.md.ion-page.hydrated', state='attached')
-                #     await sub_link.click()
-                # except playwright.async_api.Error as e:
-                #     print(f'An error occurred: {e}')
-                #     # Additional logic to handle the error, maybe retry or log the occurrence for further investigation.
-
-                # 'ion-app.md.ion-page.hydrated'
-                # 'ion-content.md.hydrated'
-                # 'ion-router-outlet.menu-content menu-content-overlay hydrated'
-                # 'ion-router-outlet.hydrated'
-                # 'ion-content.md.hydrated'
-                # 'ion-grid.md.hydrated'
-                # 'ion-row.md.hydrated'
-                # 'ion-col.md.hydrated'
-                # 'ion-grid.search_result.search_result_compact.no-bottomline.document-list.md.hydrated'
-                # 'ion-row.md.hydrated'
-                # 'ion-col.md.hydrated'
-
-                # Execute a script that pierces through the shadow roots to click the button
-                # await page.evaluate("""() => {
-                #     let shadowRoot = document.querySelector('ion-app.md.ion-page.hydrated').shadowRoot;
-                #     console.log('First level shadow root:', shadowRoot);
-                #     if (!shadowRoot) {
-                #         console.error('First level shadow root not found');
-                #         return;
-                #     }
-
-                #     // Assuming you have an array of selectors that lead to the shadow DOM hierarchy
-                #     const selectors = [
-                #         'ion-content.md.hydrated',
-                #         'ion-router-outlet.menu-content.menu-content-overlay.hydrated',
-                #         'ion-router-outlet.hydrated',
-                #         'ion-content.md.hydrated',
-                #         'ion-grid.md.hydrated',
-                #         'ion-row.md.hydrated',
-                #         'ion-col.md.hydrated',
-                #         'ion-grid.search_result.search_result_compact.no-bottomline.document-list.md.hydrated',
-                #         'ion-row.md.hydrated',
-                #         'ion-col.md.hydrated'
-                #     ];
-
-                #     selectors.forEach((selector, index) => {
-                #         if (shadowRoot) {
-                #             const nextLevel = shadowRoot.querySelector(selector);
-                #             console.log(`Level ${index + 1} shadow root:`, nextLevel);
-                #             if (nextLevel) {
-                #                 shadowRoot = nextLevel.shadowRoot;
-                #             } else {
-                #                 console.error(`Selector not found or no shadowRoot available for this level: ${selector}`);
-                #                 // Breaking out of the forEach loop since it doesn't support return
-                #                 return false;
-                #             }
-                #         }
-                #     });
-
-                #     // Attempt to find and click the download button after traversing all shadow roots
-                #     let downloadButton = shadowRoot.querySelector('a[download]');
-                #     console.log('Download button:', downloadButton);
-
-                #     if (downloadButton) {
-                #         downloadButton.click();
-                #     } else {
-                #         console.error('Download button not found');
-                #     }
-                # }""");
+                
+                await download_file(final_link, download_folder, file_name)
 
 
+                await page.go_back()
+            await page.go_back()
+        print(Final_Link_List)
+        print(len(Final_Link_List))
 
         # Close the browser
         await browser.close()
