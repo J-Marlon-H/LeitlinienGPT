@@ -1,29 +1,48 @@
 import asyncio
 from playwright.async_api import async_playwright
 import aiohttp
-import aiofiles
+# import aiofiles
 import asyncio
 import os
 import re
+import json
+
+def save_metadata_to_json(metadata, folder, filename='guideline_metadata.json'):
+    """Save metadata dictionary to a JSON file in the specified folder."""
+    # Ensure the directory exists
+    os.makedirs(folder, exist_ok=True)
+    
+    # Full path to the metadata file
+    metadata_file_path = os.path.join(folder, filename)
+    
+    # Write the dictionary to a JSON file
+    with open(metadata_file_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, ensure_ascii=False, indent=4)
+    
+    print(f"Saved metadata to {metadata_file_path}")
 
 # The function to download the file
 async def download_file(url, folder, name):
-    name = re.sub(r'[<>:"/\\|?*]', '', name)
+    timeout = aiohttp.ClientTimeout(total=600)  # Sets a longer timeout
+
     if not os.path.isdir(folder):
         os.makedirs(folder)
+
     file_path = os.path.join(folder, name)
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.get(url) as resp:
             if resp.status == 200:
-                async with aiofiles.open(file_path, 'wb') as f:
-                    await f.write(await resp.read())
-                print(f"Downloaded {name} to {folder}")
+                with open(os.path.join(file_path), 'wb') as f:
+                    async for chunk in resp.content.iter_chunked(1024):  # Reads in chunks of 1024 bytes
+                        f.write(chunk)
+                print(f"Downloaded {name}")
+
             else:
                 print(f"Failed to download {url}. Status code: {resp.status}")
 
 async def run():
     download_folder = 'Database'
-    Final_Link_List = []
+    Guideline_Metadata = {}
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)  # Use headless=False to see the browser UI
         context = await browser.new_context()
@@ -48,16 +67,21 @@ async def run():
         Fachgesellschaften= []
         for link_element in link_elements:
             href = await link_element.get_attribute('href')
-            Fachgesellschaft = await link_element.text_content()
             main_links.append(href)
+
+            # Retrieve and clean up Fachgesellschaften 
+            Fachgesellschaft = await link_element.text_content()
+            Fachgesellschaft = Fachgesellschaft.replace("; DGf", "").strip()
             Fachgesellschaften.append(Fachgesellschaft)
-        print("main_links:", len(main_links))
+
         print("Fachgesellschaften: ",len(Fachgesellschaften))
 
         # Loop through the collected links and click on each one
         for i in range(len(main_links)):
             # Navigate to the link
-            print(f'main_link: https://register.awmf.org{main_links[i]}')
+            print(f'Fachgesellschaft: {Fachgesellschaften[i]}')
+            #Fachgesellschaften[i] = Fachgesellschaften[5]
+            # await page.goto('https://register.awmf.org/de/leitlinien/aktuelle-leitlinien/fachgesellschaft/065')
             await page.goto(f'https://register.awmf.org{main_links[i]}')
             await page.wait_for_load_state('networkidle')
 
@@ -82,35 +106,52 @@ async def run():
             
             for sub_link in sub_links:
                 await page.wait_for_load_state('networkidle')
-                print("sub_link:", sub_link)
+
                 # Click on sub-link and wait for navigation
                 await page.goto(sub_link)
 
-                first_download_button = page.locator('text=Download').first
+                try:
+                    # Attempt to find the 'Download' button with a 60 second timeout
+                    first_download_button = page.locator('text=Download').first # 
+                    download_href = await first_download_button.get_attribute('href')
+                except Exception as e:  # Broad exception to catch any issue that might occur
+                    print(f"Error with 'Download' button: {str(e)}")
+                    # If the 'Download' button is not found, look for the 'weiterlesen' button
+                    print("Download button not found, looking for 'weiterlesen' button.")
+                    weiterlesen_button = page.locator('text=weiterlesen').first
+                    weiterlesen_href = await weiterlesen_button.get_attribute('href')
+                    print("weiterlesen_href: ",weiterlesen_href)
+                    await page.goto(f'{weiterlesen_href}')
+                    await page.wait_for_load_state('networkidle')
+                    first_download_button = page.locator('text=Download').first
+                    download_href = await first_download_button.get_attribute('href')
 
                 # Retrieve the 'href' attribute of the first download button
                 download_href = await first_download_button.get_attribute('href')
-
-                Final_Link_List.append(download_href)
-
-                # You can customize the file name here
-                file_name_tmp = download_href.rsplit('/', 1)[-1]
-                file_name = f"{Fachgesellschaften[i]}__{file_name_tmp}"  # Change this to your preferred file naming convention
-                print("file_name:", file_name)
+                
+                Guideline_Name = download_href.rsplit('/', 1)[-1]
+                Guideline_Name_tmp = re.sub(r'[<>:"/\\|?*]', '', Guideline_Name)
 
                 final_link = f"https://register.awmf.org{download_href}"
-                print("final_link:", final_link)
 
-                # Call the download function
-                
-                
-                await download_file(final_link, download_folder, file_name)
+                if Guideline_Name_tmp not in Guideline_Metadata:
+                    
+                    Guideline_Metadata[Guideline_Name_tmp] = {
+                                                        'Fachgesellschaft': [Fachgesellschaften[i]],
+                                                        'download_href': f"https://register.awmf.org{download_href}",
+                                                        'Guideline_Name': Guideline_Name
+                                                    }
 
-
+                    # Call the download function                
+                    await download_file(final_link, download_folder, Guideline_Name_tmp)
+                else:
+                    if Fachgesellschaften[i] not in Guideline_Metadata[Guideline_Name_tmp]['Fachgesellschaft']:
+                        Guideline_Metadata[Guideline_Name_tmp]['Fachgesellschaft'].append(Fachgesellschaften[i])
+                        print(f"Skipping already processed link: {Guideline_Name_tmp}")
+                        print(f"Fachgesellschaft now: {Guideline_Metadata[Guideline_Name_tmp]['Fachgesellschaft']}")
                 await page.go_back()
             await page.go_back()
-        print(Final_Link_List)
-        print(len(Final_Link_List))
+        save_metadata_to_json(Guideline_Metadata,download_folder)
 
         # Close the browser
         await browser.close()
